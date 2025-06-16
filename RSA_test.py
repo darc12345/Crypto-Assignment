@@ -517,7 +517,7 @@ if __name__ == "__main__":
 
         rsa_for_test = rsa 
 
-        message = b"Black monkey."
+        message = b"Walawe test."
         print(f"\nOriginal Message: '{message.decode('utf-8', errors='ignore')}'")
 
         max_msg_bytes_for_n = (rsa_for_test.n.bit_length() + 7) // 8 - 1
