@@ -444,6 +444,7 @@ class RSA():
         return self.n, self.d
     def save_state(self, filename: str):
         """Save the RSA state to a .json file"""
+        # encode everything to base64 before saving it ton the json
         state = {
             'p': base64.b64encode(self.__long_to_bytes(self.p)).decode('utf-8'),
             'q': base64.b64encode(self.__long_to_bytes(self.q)).decode('utf-8'),
@@ -452,12 +453,13 @@ class RSA():
             'd': base64.b64encode(self.__long_to_bytes(self.d)).decode('utf-8')
         }
         with open(filename, 'w') as f:
-            json.dump(state, f, indent=4) # Added indent for readability
+            json.dump(state, f, indent=4)
 
     def load_state(self, filename: str):
         """Load the RSA state from a file"""
-        with open(filename, 'r') as f: # Changed to 'r' for reading text file
+        with open(filename, 'r') as f: #changed to 'r' for reading text file, we are reading from the json file
             state = json.load(f)
+            # decode everything from base64:
             self.p = self.__bytes_to_long(base64.b64decode(state['p']))
             self.q = self.__bytes_to_long(base64.b64decode(state['q']))
             self.n = self.__bytes_to_long(base64.b64decode(state['n']))
@@ -466,7 +468,7 @@ class RSA():
             if not (self.p and self.q and self.n and self.e and self.d):
                 raise ValueError("Invalid RSA state in the file")
 
-# Testing the Darryl's RSA Implementation:
+# testing the implementation:
 
 if __name__ == "__main__":
     print("--- RSA Encryption/Decryption Test (Advanced) ---")
@@ -475,7 +477,6 @@ if __name__ == "__main__":
     
     public_exponent = 65537 
 
-    # Saving it into the rsa_keys.json, we need to encode it to base64 beforehand:
     print(f"\nInitializing RSA with nlen={rsa.nlen} and e={public_exponent}...")
     try:
         rsa.innitialize_rsa(e=public_exponent)
