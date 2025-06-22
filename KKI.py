@@ -3,38 +3,56 @@ import datetime
 import hashlib
 import math
 import gmpy2
+
+
 def long_to_bytes(n: int) -> bytes:
-    """Convert a long integer to bytes."""
+    """Convert a long integer to bytes.
+    input: n - a long integer
+    output: bytes representation of n"""
     length = (n.bit_length() + 7) // 8 or 1
     return n.to_bytes(length)
 
 
 def bytes_to_long(b: bytes) -> int:
-    """Convert bytes to a long integer."""
+    """Convert bytes to a long integer.
+    input: b - bytes
+    output: long integer representation of b"""
     return int.from_bytes(b)
+
+
 class HashDRBG():
-    def __init__(self, seedlen:int):
+    def __init__(self, seedlen: int):
+        """Initialize the Hash DRBG with a given seed length."""
         self.seedlen = seedlen
         self.personalization_string = b'NeverGonnaGiveYouUp'
-        self.C = None
-        self.V = None
+        self.C: bytes = None
+        self.V: bytes = None
         self.reseed_counter = 1
         self.reseed_interval = 5
         self.seed_material = None
-        self.seed = None
+        self.seed: bytes = None
         self.outlen = 256
 
         self.__initialize_state()  # Initial reseed to set up the DRBG
     
     def __generate_nonce(self)-> bytes:
-        """Generate a nonce for the DRBG"""
+        """Generate a nonce for the DRBG
+        input: None
+        output: bytes representation of the nonce
+        """
         temp = int(datetime.datetime.now(datetime.timezone.utc).timestamp()*1000000)
         return temp.to_bytes(length=(temp.bit_length() // 8) + 1) 
     def __Hash_df(self, m:bytes)-> bytes:
-        """Return the result of hashing m with SHA-256. The outleng is 256 bits"""
+        """Return the result of hashing m with SHA-256. The outleng is 256 bits
+        input: m - bytes to be hashed
+        output: bytes representation of the hash
+        """
         return hashlib.sha256(m).digest()
     def __initialize_state(self):
-        """Reseed the DRBG with new entropy"""
+        """Reseed the DRBG with new entropy
+        input: None
+        output: None
+        """
         entropy_input = secrets.token_bytes(self.seedlen // 8)
         nonce = self.__generate_nonce()
         self.seed_material = entropy_input + nonce + self.personalization_string
@@ -44,8 +62,13 @@ class HashDRBG():
         self.reseed_counter = 1
 
     def __reseed(self, additional_input:bytes = b''):
-        """Reseed the DRBG with additional input"""
+        """Reseed the DRBG with additional input
+        input: additional_input - bytes to be added to the reseed
+        output: None
+        """
         entropy_input = secrets.token_bytes(self.seedlen // 8)
+        if self.V is None or self.C is None or type(self.V) is not bytes or type(self.C) is not bytes:
+            raise Exception("DRBG has not been initialized")
         self.seed_material = b"00000001" +self.V+ entropy_input + additional_input
         self.seed = self.__Hash_df(self.seed_material)
         self.V = self.seed
@@ -54,13 +77,6 @@ class HashDRBG():
     def leftmost_bits(self, data: bytes, n: int) -> bytes:
         """
         Return the n leftmost bits of 'data', as a bytes object of length ceil(n/8).
-
-        - data: input bytes (big‑endian bit order).
-        - n: number of bits to extract (must be >= 0).
-        - If n == 0: returns b''.
-        - If n <= len(data)*8: takes the top n bits, dropping the rest.
-        - If n > len(data)*8: takes all bits of data, then pads with (n - len(data)*8) zeros.
-        - The returned bytes are big‑endian; any unused low‑order bits in the last byte are zeros.
         """
         if n < 0:
             raise ValueError("n must be non-negative")
@@ -73,25 +89,26 @@ class HashDRBG():
             raise ValueError(f"n ({n}) is greater than the total bit width of data ({total_bits})")
         # drop (total_bits - n) rightmost bits
         x >>= (total_bits - n)
-
-
-        # figure out how many bytes we need
         out_len = (n + 7) // 8
         return x.to_bytes(out_len, 'big')
 
     def __hash_gen(self, requested_bits:int) -> bytes:
-        """Generate hash output based on the current state"""
+        """Generate hash output based on the current state
+        input: requested_bits - number of bits to be generated
+        output: bytes representation of the generated bits"""
         output = b''
         m = math.ceil(requested_bits / self.outlen)
         data = bytes_to_long(self.V)
         for i in range(m):
-            # print(i)
             w = self.__Hash_df(long_to_bytes(data))
             output = output + w
             data = (data + 1) % 2**self.seedlen
         return self.leftmost_bits(output, requested_bits)
     def generate_ramdom_bits(self, requested_bits:int) -> bytes:
-        """Generate random bytes using the DRBG"""
+        """Generate random bytes using the DRBG
+        input: requested_bits - number of bits to be generated
+        output: bytes representation of the generated bits
+        """
         if self.reseed_counter >= self.reseed_interval:
             self.__reseed()
         self.reseed_counter += 1
@@ -100,7 +117,9 @@ class HashDRBG():
         self.V = long_to_bytes(bytes_to_long(self.V + H+long_to_bytes(self.reseed_counter)) % 2**self.seedlen)
         return output
     def generate_random_int(self, min_value:int, max_value:int) -> int:
-        """Generate a random integer in the range [min_value, max_value)"""
+        """Generate a random integer in the range [min_value, max_value)
+        input: min_value - minimum value (inclusive), max_value - maximum value (exclusive)
+        output: random integer in the range [min_value, max_value)"""
         if min_value >= max_value:
             raise ValueError("min_value must be less than max_value")
         range_size = max_value - min_value
@@ -126,10 +145,19 @@ class RSA():
         self.nlen = 3072 #This is hardcoded in respect to SP800-57, Part 1 for security_strength 128
         self.min_mr = 4
     def __long_to_bytes(self,n: int) -> bytes:
-        """Convert a long integer to bytes."""
+        """Convert a long integer to bytes.
+        input: n - a long integer
+        output: bytes representation of n"""
         length = (n.bit_length() + 7) // 8 or 1
         return n.to_bytes(length)
     def __zn_multiplication(self, a:int, b:int, n:int)->int:
+        """Calculate a and b in zn field
+        input: 
+        a   - integer
+        b   - integer
+        n   - zn
+        output:
+        (a*b)%n"""
         if a > b:
             smallest:int = b
             biggest:int = a
@@ -151,13 +179,10 @@ class RSA():
     def __zn_power(self, a:int, k:int, n:int)->int:
       """"Return the value of a to the power of k in xn"""
       str_k = str(bin(k))[2:][::-1]
-      # print(str_k)
       result = 1
       temp = a
       for i in range(len(str_k)):
-        # print(f"str_k[i] = {str_k[i]}, {temp = }")
         if(str_k[i]=='1'):
-          # print(f"Multiplying {result = } by {temp = }")
           result = self.__zn_multiplication(result, temp, n)
         temp = self.__zn_multiplication(temp, temp, n)
       return result % n
@@ -166,6 +191,7 @@ class RSA():
         """Convert bytes to a long integer."""
         return int.from_bytes(b)
     def __gcd(self, a, b):
+        """Calculate the greatest common divisor (GCD) of two integers a and b."""
         a = abs(a)
         b = abs(b)
         if a==0 and b==0:
@@ -205,6 +231,7 @@ class RSA():
             temp = temp >> 1
         return s, temp
     def __jacobi(self, a:int, n:int)->int:
+        """subroutine for jacobi symbol calculation"""
         a = a % n
         if a ==1 or n ==1:
             return 1
@@ -229,14 +256,14 @@ class RSA():
         """
         a, m = self.__find_k_and_q(w-1)
         for i in range(k):
-            b = (self.drbg.generate_random_int(2, w-2))
+            b = secrets.randbelow(w-4)+2
             if not (1<b<w-1):
                 continue
-            z = self.__zn_power(b, m, w)
+            z = pow(b, m, w)
             if (z==1 or z==w-1):
                 continue
             for j in range(1, a):
-                z = self.__zn_multiplication(z, z, w)
+                z = pow(z, 2, w)
                 if z == w-1:
                     break
                 if z == 1:
@@ -250,7 +277,6 @@ class RSA():
             return False
         s = 0
         while True:
-            print(s)
             s+=1
             if(s%2==1):
                 d = s*2+3
@@ -264,43 +290,6 @@ class RSA():
         k = c+1
         bin_k = str(bin(k))[2:]
         bin_k = bin_k[::-1] #because according to the pseudo code, it is krkr-1,...k0
-        r = len(bin_k)-1 #since we start counting from 0
-        u_i = 1
-        v_i = 1
-        inverse_2 = pow(2, -1, c)
-        for i in range(r-1, -1, -1): #since the stop  is exclusive, 0 is turned into -1
-            u_temp = (u_i*v_i) % c
-            v_temp = ((v_i*v_i + d*u_i*u_i)*inverse_2) % c
-            if bin_k[i] == '1':
-                u_i = ((u_temp + v_temp)*inverse_2 )% c
-                v_i = ((v_temp + d*u_temp)*inverse_2) % c
-            else:
-                u_i = u_temp
-                v_i = v_temp
-        #END FOR
-        if u_i == 0:
-            return True #probably prime
-        else:
-            return False #composite
-    def lucas_test(self, c:int)-> bool:
-        """Lucas test for primality"""
-        if self.__is_perfect_square(c):
-            return False
-        s = 0
-        while True:
-            print(s)
-            s+=1
-            if(s%2==1):
-                d = s*2+3
-            else:
-                d = ((s*2+3)*-1)
-            jcb = gmpy2.jacobi(d, c)
-            if jcb == 0 and abs(c) != abs(d):
-                return False #composite
-            if(jcb==-1 and self.__gcd(c, (1-d)//4)==1):
-                break
-        k = c+1
-        bin_k = str(bin(k))[2:][::-1]
         r = len(bin_k)-1 #since we start counting from 0
         u_i = 1
         v_i = 1
@@ -333,7 +322,6 @@ class RSA():
         # Generate p
         i = 0 
         while True:
-            print(i)
             ub = 2**(self.nlen//2)
             lb = (((2**(self.nlen//2-1)) * int(math.sqrt(2)*1e12)) //int(1e12))
             p = (self.drbg.generate_random_int(lb, ub))
@@ -344,39 +332,28 @@ class RSA():
             if p < (((2**(self.nlen//2-1)) * int(math.sqrt(2)*1e12)) //int(1e12)): #to avoid float conversion error 
                continue
             if self.__gcd(p-1, e) == 1:
-                print('a')
-            #    if self.__miller_rabin(p, self.min_mr*2):
-                if gmpy2.mpz(p).is_probab_prime(self.min_mr*2):
-                    print('b')
+                if self.__miller_rabin(p, self.min_mr*2):
                     if self.__lucas_test(p):
                         self.p = p
-                        print('c')
                         break
             i += 1
             if i > self.nlen*5:
                 raise Exception("Failed to generate a probable prime after many attempts")
         # Generate q
-        print('generating q')
         i = 0
         while True:
-            print(f"{i = }")
             q  =bytes_to_long(self.drbg.generate_ramdom_bits(self.nlen//2))
             if b is not None:
                 q = q + ((b-q)%8)
             if q % 2 == 0:
                q +=1 
-            print('e')
             if q < (((2**(self.nlen//2-1)) * int(math.sqrt(2)*1e12)) //int(1e12)):
                 continue
-            print('f')
             if (abs(p-q)<((2**(self.nlen//2-100)))):
                 continue
-            print('g')
             if self.__gcd(q-1, e) == 1:
-                print('d')
-                if gmpy2.mpz(q).is_probab_prime(self.min_mr*2):
+                if self.__miller_rabin(q, self.min_mr*2):
                     if self.__lucas_test(q):
-                        print('e')
                         self.q = q
                         break
             i += 1
@@ -465,3 +442,17 @@ class RSA():
             self.d = self.__bytes_to_long(state['d'])
             if not (self.p and self.q and self.n and self.e and self.d):
                 raise ValueError("Invalid RSA state in the file")
+        
+rsa = RSA()
+rsa.innitialize_rsa(e=65537, a=1, b=3)  # Example initialization with e=65537 and constraints for p and q
+# Example usage
+public_key = rsa.get_public_key()
+private_key = rsa.get_private_key()
+print(f"Public Key: {public_key}")
+print(f"Private Key: {private_key}")
+# Example encryption and decryption
+plaintext = b"Hello, RSA!"
+ciphertext = rsa.encrypt(plaintext)
+print(f"Ciphertext: {ciphertext.hex()}")
+decrypted_text = rsa.decrypt(ciphertext)
+print(f"Decrypted Text: {decrypted_text.decode('utf-8')}")
