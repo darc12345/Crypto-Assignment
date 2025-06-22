@@ -443,16 +443,16 @@ class RSA():
             if not (self.p and self.q and self.n and self.e and self.d):
                 raise ValueError("Invalid RSA state in the file")
         
-rsa = RSA()
-rsa.innitialize_rsa(e=65537, a=1, b=3)  # Example initialization with e=65537 and constraints for p and q
-# Example usage
-public_key = rsa.get_public_key()
-private_key = rsa.get_private_key()
-print(f"Public Key: {public_key}")
-print(f"Private Key: {private_key}")
-# Example encryption and decryption
-plaintext = b"Hello, RSA!"
-ciphertext = rsa.encrypt(plaintext)
-print(f"Ciphertext: {ciphertext.hex()}")
-decrypted_text = rsa.decrypt(ciphertext)
-print(f"Decrypted Text: {decrypted_text.decode('utf-8')}")
+# rsa = RSA()
+# rsa.innitialize_rsa(e=65537, a=1, b=3)  # Example initialization with e=65537 and constraints for p and q
+# # Example usage
+# public_key = rsa.get_public_key()
+# private_key = rsa.get_private_key()
+# print(f"Public Key: {public_key}")
+# print(f"Private Key: {private_key}")
+# # Example encryption and decryption
+# plaintext = b"Hello, RSA!"
+# ciphertext = rsa.encrypt(plaintext)
+# print(f"Ciphertext: {ciphertext.hex()}")
+# decrypted_text = rsa.decrypt(ciphertext)
+# print(f"Decrypted Text: {decrypted_text.decode('utf-8')}")
