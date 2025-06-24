@@ -1,0 +1,58 @@
+@startuml
+start
+
+:Initialize RSA object;
+partition "Determnistic Random Bit Generator (DRBG)"{
+    :Initialize DRBG with seed;
+--> [Calls] __initialize_state()
+--> [Inits] V, C, seed, reseed_counter;
+
+:Call initialize_rsa(e, a, b);
+:Initialize DRBG with seed;
+--> [Calls] __initialize_state()
+--> [Inits] V, C, seed, reseed_counter;
+}
+
+
+:Call initialize_rsa(e, a, b);
+
+:Generate probable prime p;
+repeat
+    :Generate random int p using DRBG;
+    :Check if p is odd and passes primality tests;
+repeat while (p is invalid)
+
+:Generate probable prime q;
+repeat
+    :Generate random int q using DRBG;
+    :Check if q is odd and passes primality tests;
+    :Ensure p and q are not too close;
+repeat while (q is invalid)
+
+:Set n = p * q;
+:Set phi = (p - 1)(q - 1);
+
+:Check gcd(e, phi) == 1;
+:Compute d = modular_inverse(e, phi);
+
+:Set public key (n, e);
+:Set private key (n, d);
+
+:Ready to encrypt/decrypt;
+
+partition "Encryption" {
+    :Convert plaintext to int;
+    :Encrypt using zn_power(m, e, n);
+    :Return ciphertext;
+}
+
+partition "Decryption" {
+    :Convert ciphertext to int;
+    :Decrypt using zn_power(c, d, n);
+    :Return plaintext;
+}
+
+:Can save/load RSA state;
+
+stop
+@enduml

@@ -282,7 +282,7 @@ class RSA():
                 d = s*2+3
             else:
                 d = ((s*2+3)*-1)
-            jcb = gmpy2.jacobi(d, c)
+            jcb = self.__jacobi(d, c)
             if jcb == 0:
                 return False #composite
             if(jcb==-1 and self.__gcd(c, (1-d)//4)==1):
@@ -423,11 +423,11 @@ class RSA():
     def save_state(self, filename: str):
         """Save the RSA state to a .json file"""
         state = {
-            'p': self.__long_to_bytes(self.p),
-            'q': self.__long_to_bytes(self.q),
-            'n': self.__long_to_bytes(self.n),
+            'p': (self.p),
+            'q': (self.q),
+            'n': (self.n),
             'e': self.e,
-            'd': self.__long_to_bytes(self.d)
+            'd': (self.d)
         }
         with open(filename, 'w') as f:
             json.dump(state, f)
@@ -435,11 +435,11 @@ class RSA():
         """Load the RSA state from a file"""
         with open(filename, 'rb') as f:
             state = json.load(f)
-            self.p = self.__bytes_to_long(state['p'])
-            self.q = self.__bytes_to_long(state['q'])
-            self.n = self.__bytes_to_long(state['n'])
+            self.p = (state['p'])
+            self.q = (state['q'])
+            self.n = (state['n'])
             self.e = state['e']
-            self.d = self.__bytes_to_long(state['d'])
+            self.d = (state['d'])
             if not (self.p and self.q and self.n and self.e and self.d):
                 raise ValueError("Invalid RSA state in the file")
         
@@ -456,3 +456,6 @@ class RSA():
 # print(f"Ciphertext: {ciphertext.hex()}")
 # decrypted_text = rsa.decrypt(ciphertext)
 # print(f"Decrypted Text: {decrypted_text.decode('utf-8')}")
+# # Save and load RSA state
+# rsa.save_state('rsa_state.json')
+# rsa.load_state('rsa_state.json')

@@ -1,0 +1,11 @@
+@@startuml
+
+[Generate Prime Number] --> [HashDRBG]
+[Generate Prime Number]-->[Miller-Rabin] 
+[Miller-Rabin]--> [HashDRBG]
+[Generate Prime Number]-->[Lucas Test]
+[Lucas Test] --> [is Perfect Square]
+[is Perfect Square] -->[gmpy2]
+[Lucas Test] --> [Jacobi]
+[Lucas Test] --> [gmpy2]
+@@enduml
