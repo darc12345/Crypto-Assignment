@@ -58,40 +58,40 @@ The `KKI.py` file can be imported as a module into other Python projects to make
 from KKI import RSA
 
 if __name__ == "__main__":
+    #define RSA class locally
     rsa = RSA()
+
+    #generate p and q
     print("Generating RSA key pair...")
-    try:
-        rsa.innitialize_rsa(e=65537)
-        public_key = rsa.get_public_key()
-        private_key = rsa.get_private_key()
+    rsa.innitialize_rsa(e=65537)
+    public_key = rsa.get_public_key()
+    private_key = rsa.get_private_key()
 
-        print(f"Public Key (n, e): {public_key}")
-        print(f"Private Key (n, d): {private_key}")
+    print(f"Public Key (n, e): {public_key}")
+    print(f"Private Key (n, d): {private_key}")
 
-        plaintext = b"Rivest, Shamir, Adleman. RSA!"
-        print(f"\nOriginal Plaintext: {plaintext.decode('utf-8')}")
+    #original plaintext to be encrypted
+    plaintext = b"Rivest, Shamir, Adleman. RSA!"
+    print(f"\nPlaintext: {plaintext.decode('utf-8')}")
 
-        ciphertext = rsa.encrypt(plaintext)
-        print(f"Ciphertext (hex): {ciphertext.hex()}")
+    #encrypt the plaintext with RSA
+    ciphertext = rsa.encrypt(plaintext)
+    print(f"Ciphertext: {ciphertext.hex()}")
 
-        decrypted_ciphertext = rsa.decrypt(ciphertext)
-        print(f"Decrypted Text: {decrypted_ciphertext.decode('utf-8')}")
-        
-        #save previous RSA state to rsa_keys.json
-        rsa_keys = "rsa_keys.json"
-        rsa.save_state(rsa_keys)
-        print(f"\nRSA keys saved to {rsa_keys}")
+    #decrypt the ciphtertext
+    decrypted_ciphertext = rsa.decrypt(ciphertext)
+    print(f"Decrypted Text: {decrypted_ciphertext.decode('utf-8')}")
+    
+    #save previous RSA state to rsa_keys.json
+    rsa_keys = "rsa_keys.json"
+    rsa.save_state(rsa_keys)
+    print(f"\nRSA keys saved to {rsa_keys}")
 
-        #create new RSA instance and load previous state from rsa_keys.json
-        new_rsa = RSA()
-        new_rsa.load_state(rsa_keys)
-        print(f"RSA keys loaded from {rsa_keys}")
-        print(f"Loaded Public Key: {new_rsa.get_public_key()}")
-        
-    #error handling
-    except ValueError as e:
-        print(f"Error: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    #create new RSA instance and load previous state from rsa_keys.json
+    new_rsa = RSA()
+    new_rsa.load_state(rsa_keys)
+    print(f"RSA keys loaded from {rsa_keys}")
+    print(f"Loaded Public Key: {new_rsa.get_public_key()}")
+
 ```
 

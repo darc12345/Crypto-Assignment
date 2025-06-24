@@ -1,1 +1,5 @@
 KKI.ipynb
+env/
+.venv/
+rsa_keys.json
+__pycache__/
