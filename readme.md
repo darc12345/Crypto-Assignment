@@ -47,3 +47,51 @@ This project requires Python 3 and the `gmpy2` library for efficient arbitrary-p
     pip3 install gmpy2
     ```
     *Note: Installing `gmpy2` might require C compiler tools. Please refer to the [gmpy2 documentation](https://gmpy2.readthedocs.io/en/latest/install.html) for specific platform requirements.*
+
+### Usage as a Python Module
+
+The `KKI.py` file can be imported as a module into other Python projects to make use of the RSA functionalities.
+
+**Example `RSA_test.py`:**
+
+```python
+from KKI import RSA
+
+if __name__ == "__main__":
+    rsa = RSA()
+    print("Generating RSA key pair...")
+    try:
+        rsa.innitialize_rsa(e=65537)
+        public_key = rsa.get_public_key()
+        private_key = rsa.get_private_key()
+
+        print(f"Public Key (n, e): {public_key}")
+        print(f"Private Key (n, d): {private_key}")
+
+        plaintext = b"Rivest, Shamir, Adleman. RSA!"
+        print(f"\nOriginal Plaintext: {plaintext.decode('utf-8')}")
+
+        ciphertext = rsa.encrypt(plaintext)
+        print(f"Ciphertext (hex): {ciphertext.hex()}")
+
+        decrypted_ciphertext = rsa.decrypt(ciphertext)
+        print(f"Decrypted Text: {decrypted_ciphertext.decode('utf-8')}")
+        
+        #save previous RSA state to rsa_keys.json
+        rsa_keys = "rsa_keys.json"
+        rsa.save_state(rsa_keys)
+        print(f"\nRSA keys saved to {rsa_keys}")
+
+        #create new RSA instance and load previous state from rsa_keys.json
+        new_rsa = RSA()
+        new_rsa.load_state(rsa_keys)
+        print(f"RSA keys loaded from {rsa_keys}")
+        print(f"Loaded Public Key: {new_rsa.get_public_key()}")
+        
+    #error handling
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+```
+
