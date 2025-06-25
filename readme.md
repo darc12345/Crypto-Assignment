@@ -58,7 +58,7 @@ from KKI import RSA
 #define RSA class locally
 rsa = RSA()
 
-#generate p and q
+#generate public key e and private key d
 print("Generating RSA key pair...")
 rsa.innitialize_rsa(e=65537)
 public_key = rsa.get_public_key()
